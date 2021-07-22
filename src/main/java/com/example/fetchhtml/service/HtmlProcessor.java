@@ -33,25 +33,22 @@ public class HtmlProcessor {
         fetch(baseUrl, 0);
     }
 
-// async variant
+    List<CompletableFuture<Set<String>>> myJobs = new ArrayList<>();
+
+    // async variant
     public void fetch(String url, int depth) {
         if (depth <= depthFactor) {
             CompletableFuture<Set<String>> childUrlsSet = null;
             try {
                 childUrlsSet = htmlFetcherUtils.fetchHtmlDoc(url, depth);
+                myJobs.add(childUrlsSet);
             } catch (IOException e) {
                 e.printStackTrace();
             }
             final int d = depth + 1;
-            try {
-                childUrlsSet.get().forEach(u -> fetch(u, d));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            }
-
+            childUrlsSet.join().forEach(u -> fetch(u, d));
         }
+        CompletableFuture.allOf(myJobs.toArray(new CompletableFuture[0])).join();
     }
 
     // one thread variant
