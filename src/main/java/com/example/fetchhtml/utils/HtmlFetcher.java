@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * @author Dmitry Itskov
  */
 @Component
-public class HtmlFetcherUtils {
+public class HtmlFetcher {
 
     @Value("${fetcher.directory_for_url}")
     private String htmlsDirectory;
@@ -34,50 +34,31 @@ public class HtmlFetcherUtils {
 
     private final static Set<String> globalUrls = new HashSet<>(); // App uses this set to check if URL uniq or not
 
-    // async variant
-    @Async("threadPoolTaskExecutor")
-    public CompletableFuture<Set<String>> fetchHtmlDoc(String url, int depth) throws IOException {
+    @Async
+    public CompletableFuture<Set<String>> fetchHtmlDocument(String url, int depth) throws IOException {
         try {
-            Document doc = Jsoup.connect(url).get();
-            saveHtmlDocToFile(doc, depth, url);
-            final Document finalDoc = doc;
-            Set<String> res = findUniqUrlsInDoc(finalDoc);
-            return CompletableFuture.completedFuture(res);
+            Document document = Jsoup.connect(url).get();
+            saveHtmlDocumentToFile(document, depth, url);
+            Set<String> result = findUniqUrlsInDocument(document);
+            return CompletableFuture.completedFuture(result);
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
         }
-
     }
 
-    // one thread variant
-//    public Set<String> fetchHtmlDoc(String url, int depth) {
-//        Document doc = null;
-//        try {
-//            doc = Jsoup.connect(url).get();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        saveHtmlDocToFile(doc, depth, url);
-//        final Document finalDoc = doc;
-//        return  findUniqUrlsInDoc(finalDoc);
-//    }
-
-    public void saveHtmlDocToFile(Document doc, int depth, String url) {
-        String urlWithoutUtm;
-        if (url.contains("?")) {
-            urlWithoutUtm = url.substring(0, url.indexOf("?"));
-        } else {
-            urlWithoutUtm = url;
-        }
-        String urlWithoutSpecificChars = urlWithoutUtm.replace("://", "_").replace("/", "_").replace("?", "_");
+    private void saveHtmlDocumentToFile(Document doc, int depth, String url) {
+        String urlWithoutUtm = url.contains("?") ? url.substring(0, url.indexOf("?")) : url;
+        String urlWithoutSpecificChars = urlWithoutUtm
+                .replace("://", "_")
+                .replace("/", "_");
         String dirName = htmlsDirectory + depth + "/";
-        String fullFileName = dirName + urlWithoutSpecificChars + ".html";
         try {
             Files.createDirectories(Paths.get(dirName));
         } catch (IOException e) {
             e.printStackTrace();
         }
+        String fullFileName = dirName + urlWithoutSpecificChars + ".html";
         try {
             Files.write(
                     Paths.get(fullFileName),
@@ -89,13 +70,13 @@ public class HtmlFetcherUtils {
         }
     }
 
-    public Set findUniqUrlsInDoc(Document htmlDocument) {
+    private Set<String> findUniqUrlsInDocument(Document htmlDocument) {
         Elements htmlLinks = htmlDocument.select("a");
         return htmlLinks.stream()
                 .map(a -> a.absUrl("href"))
-                .filter(a -> !a.isEmpty())
-                .filter(b -> isCrossLevelUniqueness ? !globalUrls.contains(b) : true)
-                .peek(c -> globalUrls.add(c))
+                .filter(b -> !b.isEmpty())
+                .filter(c -> !isCrossLevelUniqueness || !globalUrls.contains(c))
+                .peek(globalUrls::add)
                 .limit(maxUrlsFromPage)
                 .collect(Collectors.toSet());
     }
