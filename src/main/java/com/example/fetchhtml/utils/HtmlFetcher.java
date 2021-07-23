@@ -2,16 +2,15 @@ package com.example.fetchhtml.utils;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -29,7 +28,7 @@ public class HtmlFetcher {
     @Value("${fetcher.is_cross_level_uniqueness}")
     private boolean isCrossLevelUniqueness;
 
-    private final static Set<String> globalUrls = new HashSet<>(); // App uses this set to check if URL uniq or not
+    private final static Set<String> globalUrls = ConcurrentHashMap.newKeySet(); // App uses this set to check if URL uniq or not
 
     @Async
     public CompletableFuture<Set<String>> fetchHtmlDocument(String url, int depth) throws IOException {
