@@ -45,8 +45,7 @@ public class HtmlFetcher {
     }
 
     private Set<String> findUniqUrlsInDocument(Document htmlDocument) {
-        Elements htmlLinks = htmlDocument.select("a");
-        return htmlLinks.stream()
+        return htmlDocument.select("a").stream()
                 .map(a -> a.absUrl("href"))
                 .filter(b -> !b.isEmpty())
                 .filter(c -> !isCrossLevelUniqueness || !globalUrls.contains(c))

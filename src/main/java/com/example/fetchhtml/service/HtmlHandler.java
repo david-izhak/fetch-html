@@ -26,15 +26,15 @@ public class HtmlHandler {
     private int depthFactor;
 
     @PostConstruct
-    public void startHandling() {
+    public void startHandlingUrls() {
         HashSet<String> urlsForNewJob = new HashSet<>();
         urlsForNewJob.add(baseUrl);
         for (int i = 0; i <= depthFactor; i++) {
-            urlsForNewJob = handle(urlsForNewJob, i);
+            urlsForNewJob = handleUrls(urlsForNewJob, i);
         }
     }
 
-    private HashSet<String> handle(Set<String> urls, int currentDepth) {
+    private HashSet<String> handleUrls(Set<String> urls, int currentDepth) {
         HashSet<String> urlsForNewJob = new HashSet<>();
         for (String url : urls) {
             CompletableFuture<Set<String>> childrenUrlsSet = null;
