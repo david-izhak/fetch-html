@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -24,24 +25,20 @@ public class HtmlHandler {
     @Value("${fetcher.depth_factor}")
     private int depthFactor;
 
-    private static HashSet<String> urls = new HashSet<>();
-
+    @PostConstruct
     public void startHandling() {
-        if(urls.isEmpty()){
-            urls.add(baseUrl);
-        }
-        HashSet<String> urlsForNewJob = urls;
+        HashSet<String> urlsForNewJob = new HashSet<>();
+        urlsForNewJob.add(baseUrl);
         for (int i = 0; i <= depthFactor; i++) {
             urlsForNewJob = handle(urlsForNewJob, i);
         }
     }
 
-    public HashSet<String> handle(Set<String> urls, int currentDepth) {
+    private HashSet<String> handle(Set<String> urls, int currentDepth) {
         HashSet<String> urlsForNewJob = new HashSet<>();
-        for(String url: urls){
+        for (String url : urls) {
             CompletableFuture<Set<String>> childrenUrlsSet = null;
             try {
-
                 childrenUrlsSet = htmlFetcher.fetchHtmlDocument(url, currentDepth);
             } catch (IOException e) {
                 e.printStackTrace();

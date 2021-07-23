@@ -17,9 +17,9 @@ public class FetchHtmlApplication {
 //        System.exit(0);
     }
 
-    @Bean(initMethod= "startHandling")
-    public HtmlHandler getBean() {
-        return new HtmlHandler();
-    }
+//    @Bean(initMethod= "startHandling")
+//    public HtmlHandler getBean() {
+//        return new HtmlHandler();
+//    }
 
 }

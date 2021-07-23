@@ -3,15 +3,12 @@ package com.example.fetchhtml.utils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -23,8 +20,8 @@ import java.util.stream.Collectors;
 @Component
 public class HtmlFetcher {
 
-    @Value("${fetcher.directory_for_url}")
-    private String htmlsDirectory;
+    @Autowired
+    private HtmlSaver htmlSaver;
 
     @Value("${fetcher.max_urls_from_page}")
     private long maxUrlsFromPage;
@@ -38,35 +35,12 @@ public class HtmlFetcher {
     public CompletableFuture<Set<String>> fetchHtmlDocument(String url, int depth) throws IOException {
         try {
             Document document = Jsoup.connect(url).get();
-            saveHtmlDocumentToFile(document, depth, url);
+            htmlSaver.saveHtmlDocumentToFile(document, depth, url);
             Set<String> result = findUniqUrlsInDocument(document);
             return CompletableFuture.completedFuture(result);
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
-        }
-    }
-
-    private void saveHtmlDocumentToFile(Document doc, int depth, String url) {
-        String urlWithoutUtm = url.contains("?") ? url.substring(0, url.indexOf("?")) : url;
-        String urlWithoutSpecificChars = urlWithoutUtm
-                .replace("://", "_")
-                .replace("/", "_");
-        String dirName = htmlsDirectory + depth + "/";
-        try {
-            Files.createDirectories(Paths.get(dirName));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        String fullFileName = dirName + urlWithoutSpecificChars + ".html";
-        try {
-            Files.write(
-                    Paths.get(fullFileName),
-                    doc.outerHtml().getBytes(StandardCharsets.UTF_8),
-                    StandardOpenOption.CREATE,
-                    StandardOpenOption.TRUNCATE_EXISTING);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
