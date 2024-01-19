@@ -27,15 +27,15 @@ public class HtmlHandler {
 
     @PostConstruct
     public void startHandlingUrls() {
-        HashSet<String> urlsForNewJob = new HashSet<>();
+        Set<String> urlsForNewJob = new HashSet<>();
         urlsForNewJob.add(baseUrl);
         for (int i = 0; i <= depthFactor; i++) {
             urlsForNewJob = handleUrls(urlsForNewJob, i);
         }
     }
 
-    private HashSet<String> handleUrls(Set<String> urls, int currentDepth) {
-        HashSet<String> urlsForNewJob = new HashSet<>();
+    private Set<String> handleUrls(Set<String> urls, int currentDepth) {
+        Set<String> urlsForNewJob = new HashSet<>();
         for (String url : urls) {
             CompletableFuture<Set<String>> childrenUrlsSet = null;
             try {
@@ -43,7 +43,7 @@ public class HtmlHandler {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            urlsForNewJob.addAll(childrenUrlsSet != null ? childrenUrlsSet.join() : null);
+            urlsForNewJob.addAll(childrenUrlsSet != null ? childrenUrlsSet.join() : Collections.emptySet());
         }
         return urlsForNewJob;
     }
